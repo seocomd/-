@@ -3067,6 +3067,7 @@ const PreviewArea = ({
         scale: 2, 
         useCORS: true, 
         letterRendering: true,
+        logging: true,
         onclone: (clonedDoc: Document) => {
           clonedDoc.body.classList.add('pdf-capture');
           const clonedElement = clonedDoc.getElementById('proposal-document');
@@ -3074,29 +3075,41 @@ const PreviewArea = ({
             clonedElement.classList.add('pdf-mode');
           }
           
-          // Fix for html2canvas crashing on oklch/oklab colors (Tailwind 4 default)
-          const elements = clonedDoc.getElementsByTagName('*');
-          for (let i = 0; i < elements.length; i++) {
-            const el = elements[i] as HTMLElement;
-            const originalEl = element.getElementsByTagName('*')[i] as HTMLElement;
-            
-            if (originalEl) {
-              const style = window.getComputedStyle(originalEl);
-              const props = ['color', 'backgroundColor', 'borderColor', 'fill', 'stroke'];
-              
-              props.forEach(prop => {
-                const value = style[prop as any];
-                // If it's a modern color function, html2canvas will crash. 
-                // We attempt to set a safe fallback or just let it be if it's already rgb/hex.
-                if (value && (value.includes('oklch') || value.includes('oklab') || value.includes('color('))) {
-                  // Fallback to a safe hex if it's a brand related element, otherwise black/inherit
-                  el.style.setProperty(prop, '#002F87', 'important'); 
-                }
-              });
+          // Remove external stylesheets to avoid CORS errors with cssRules scanning
+          const links = clonedDoc.getElementsByTagName('link');
+          for (let i = links.length - 1; i >= 0; i--) {
+            const link = links[i];
+            if (link.rel === 'stylesheet' && link.href && !link.href.includes(window.location.origin)) {
+              link.parentNode?.removeChild(link);
             }
           }
 
-          // Also strip from any style tags to be safe
+          // Force replace all modern oklab/oklch colors which crash html2canvas (Tailwind 4)
+          const elements = clonedDoc.getElementsByTagName('*');
+          for (let i = 0; i < elements.length; i++) {
+            const el = elements[i] as HTMLElement;
+            if (!el.style) continue;
+
+            const computed = window.getComputedStyle(el);
+            const colorProps = ['color', 'backgroundColor', 'borderColor', 'fill', 'stroke', 'outlineColor'];
+            
+            colorProps.forEach(prop => {
+              const val = computed.getPropertyValue(prop);
+              if (val.includes('oklch') || val.includes('oklab') || val.includes('color(')) {
+                el.style.setProperty(prop, '#002F87', 'important');
+              }
+            });
+
+            // Strip complex oklab mentions from backgrounds/shadows
+            ['backgroundImage', 'boxShadow'].forEach(prop => {
+              const val = computed.getPropertyValue(prop);
+              if (val.includes('oklch') || val.includes('oklab')) {
+                el.style.setProperty(prop, 'none', 'important');
+              }
+            });
+          }
+
+          // Deep clean any residual style tags
           const styleTags = clonedDoc.getElementsByTagName('style');
           for (let i = 0; i < styleTags.length; i++) {
             styleTags[i].innerHTML = styleTags[i].innerHTML
@@ -3110,7 +3123,13 @@ const PreviewArea = ({
       jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const },
       pagebreak: { mode: ['css', 'legacy'], avoid: ['.page-break-avoid', 'img', 'table', 'tr'] }
     };
-    html2pdf().from(element).set(opt).save();
+    try {
+      html2pdf().from(element).set(opt).save();
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      // Fallback: just use window.print
+      window.print();
+    }
   };
 
   const handlePrint = () => {
