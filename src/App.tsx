@@ -884,10 +884,11 @@ export default function App() {
                   
                   // Delivery
                   setDeliveryInfo({ 
-                    type: qData.deliveryMethod === 'self_pickup' ? 'pickup' : 'delivery',
-                    address: qData.activityRegion || '', 
+                    type: qData.deliveryMethod === 'pickup' ? 'pickup' : 'delivery',
+                    address: qData.deliveryCity || '', 
                     price: 0, 
-                    isIncluded: qData.deliveryMethod === 'company_delivery' 
+                    isIncluded: qData.deliveryMethod === 'company_delivery',
+                    transportType: 'auto'
                   });
                   
                   // Mode and AVR
@@ -1538,7 +1539,7 @@ const AdminSidebar = ({
   };
 
   return (
-    <aside className="w-[360px] bg-white border-r border-border-color p-0 flex flex-col h-full shadow-lg z-10 no-print">
+    <aside className="w-[480px] bg-white border-r border-border-color p-0 flex flex-col h-full shadow-lg z-10 no-print">
       <div className="p-6 border-b border-doc-slate-50 flex items-center justify-between">
         <button onClick={onBack} className="p-2 hover:bg-doc-slate-50 rounded-lg text-doc-slate-400 transition-colors">
           <ArrowLeft className="w-5 h-5" />
@@ -1596,69 +1597,120 @@ const AdminSidebar = ({
                   />
                 </div>
 
-                <div className="flex flex-col gap-2 p-3 bg-doc-slate-50 rounded-xl">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-doc-slate-500 uppercase pl-1">Сопроводительное письмо</label>
+                  <textarea 
+                    placeholder="Введите текст приветствия..."
+                    value={coverLetter}
+                    onChange={(e) => setCoverLetter(e.target.value)}
+                    className="admin-input min-h-[120px] py-3 leading-relaxed text-xs"
+                  />
+                </div>
+
+                {/* Назначение ДЭС */}
+                <div className="space-y-3 pt-4 border-t border-doc-slate-100">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-bold">
-                      <Layers className="w-4 h-4 text-brand-blue" />
-                      <span className="text-[11px] font-black text-brand-blue uppercase">Две станции</span>
-                    </div>
+                    <p className="text-[11px] font-black text-doc-slate-500 uppercase tracking-widest">Назначение ДЭС</p>
                     <button 
                       onClick={() => {
-                        const next = !isTwoStations;
-                        setIsTwoStations(next);
-                        if (next) setIsThreeStations(false);
+                        setUsePurpose(!usePurpose);
+                        const newBlocks = [...blocks];
+                        const idx = newBlocks.findIndex(b => b.type === 'purpose');
+                        if (idx !== -1) {
+                          newBlocks[idx].isVisible = !usePurpose;
+                          setBlocks(newBlocks);
+                        }
                       }}
                       className={cn(
                         "relative w-10 h-5 rounded-full transition-colors",
-                        isTwoStations ? 'bg-brand-blue' : 'bg-doc-slate-300'
+                        usePurpose ? 'bg-brand-blue' : 'bg-doc-slate-300'
                       )}
                     >
                       <div className={cn(
                         "absolute top-1 w-3 h-3 bg-white rounded-full transition-transform",
-                        isTwoStations ? 'left-6' : 'left-1'
+                        usePurpose ? 'left-6' : 'left-1'
                       )} />
                     </button>
                   </div>
-                  <div className="flex items-center justify-between border-t border-doc-slate-200 pt-2">
-                    <div className="flex items-center gap-2 font-bold">
-                      <Layers className="w-4 h-4 text-emerald-600" />
-                      <span className="text-[11px] font-black text-emerald-600 uppercase">Три станции</span>
-                    </div>
+                  {usePurpose && (
+                    <select 
+                      value={purposeType}
+                      onChange={(e) => setPurposeType(e.target.value as any)}
+                      className="admin-input text-xs font-bold"
+                    >
+                      {Object.entries(PURPOSES).map(([k, v]) => (
+                        <option key={k} value={k}>{v.label}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Number of Stations */}
+                <div className="space-y-3 pt-4 border-t border-doc-slate-100">
+                  <p className="text-[11px] font-black text-brand-blue uppercase tracking-widest">Количество станций</p>
+                  <div className="flex gap-2 p-1 bg-doc-slate-100 rounded-2xl">
                     <button 
-                      onClick={() => {
-                        const next = !isThreeStations;
-                        setIsThreeStations(next);
-                        if (next) setIsTwoStations(false);
-                      }}
-                      className={cn(
-                        "relative w-10 h-5 rounded-full transition-colors",
-                        isThreeStations ? 'bg-emerald-600' : 'bg-doc-slate-300'
-                      )}
+                      onClick={() => { setIsTwoStations(false); setIsThreeStations(false); }}
+                      className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all", (!isTwoStations && !isThreeStations) ? "bg-white text-brand-blue shadow-md scale-105 z-10" : "text-doc-slate-400 hover:text-doc-slate-600")}
                     >
-                      <div className={cn(
-                        "absolute top-1 w-3 h-3 bg-white rounded-full transition-transform",
-                        isThreeStations ? 'left-6' : 'left-1'
-                      )} />
+                      Одна
                     </button>
-                  </div>
-                  <div className="flex items-center justify-between border-t border-doc-slate-200 pt-2">
-                    <div className="flex items-center gap-2 font-bold">
-                      <Zap className="w-4 h-4 text-orange-500" />
-                      <span className="text-[11px] font-black text-orange-500 uppercase">Блок Затраты</span>
-                    </div>
                     <button 
-                      onClick={() => setBlocks(blocks.map((b: Block) => b.type === 'costs' ? { ...b, isVisible: !b.isVisible } : b))}
-                      className={cn(
-                        "relative w-10 h-5 rounded-full transition-colors",
-                        blocks.find((b: Block) => b.type === 'costs')?.isVisible ? 'bg-orange-500' : 'bg-doc-slate-300'
-                      )}
+                      onClick={() => { setIsTwoStations(true); setIsThreeStations(false); }}
+                      className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all", (isTwoStations && !isThreeStations) ? "bg-white text-brand-blue shadow-md scale-105 z-10" : "text-doc-slate-400 hover:text-doc-slate-600")}
                     >
-                      <div className={cn(
-                        "absolute top-1 w-3 h-3 bg-white rounded-full transition-transform",
-                        blocks.find((b: Block) => b.type === 'costs')?.isVisible ? 'left-6' : 'left-1'
-                      )} />
+                      Две
+                    </button>
+                    <button 
+                      onClick={() => { setIsTwoStations(false); setIsThreeStations(true); }}
+                      className={cn("flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all", isThreeStations ? "bg-white text-emerald-600 shadow-md scale-105 z-10" : "text-doc-slate-400 hover:text-doc-slate-600")}
+                    >
+                      Три
                     </button>
                   </div>
+                </div>
+
+                <div className="space-y-4 pt-2 border-t border-doc-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-black text-brand-blue uppercase leading-none">Конфигурация Станции 1</p>
+                    {powerFilter && (
+                      <button 
+                        onClick={() => setPowerFilter(null)}
+                        className="text-[9px] font-black text-red-500 uppercase bg-red-50 px-2 py-1 rounded hover:bg-red-100"
+                      >
+                        Сбросить фильтр ({powerFilter} кВт)
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    <StationFields config={station1} setConfig={setStation1} specs={loadedSpecs} powerFilter={powerFilter} />
+                    <FormattedPriceInput label="Стоимость ДЭС 1" value={station1.price || 0} onChange={(val: number) => setStation1({...station1, price: val})} className="text-brand-blue" />
+                  </div>
+                </div>
+
+                {(isTwoStations || isThreeStations) && (
+                  <div className="space-y-4 pt-4 border-t border-brand-blue/10">
+                    <p className="text-[10px] font-black text-brand-blue uppercase leading-none mb-2">Конфигурация Станции 2</p>
+                    <div className="space-y-4">
+                      <StationFields config={station2} setConfig={setStation2} specs={loadedSpecs} />
+                      <FormattedPriceInput label="Стоимость ДЭС 2" value={station2.price || 0} onChange={(val: number) => setStation2({...station2, price: val})} className="text-brand-blue" />
+                    </div>
+                  </div>
+                )}
+
+                {isThreeStations && (
+                  <div className="space-y-4 pt-4 border-t border-emerald-600/10">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase leading-none mb-2">Конфигурация Станции 3</p>
+                    <div className="space-y-4">
+                      <StationFields config={station3} setConfig={setStation3} specs={loadedSpecs} />
+                      <FormattedPriceInput label="Стоимость ДЭС 3" value={station3.price || 0} onChange={(val: number) => setStation3({...station3, price: val})} className="text-emerald-600" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4 pt-4 border-t border-doc-slate-100">
+                  <FormattedPriceInput label="Тариф топлива (руб/л)" value={fuelPrice} onChange={setFuelPrice} className="bg-white" />
+                  <FormattedPriceInput label="Тариф ТО (руб/час)" value={toRate} onChange={setToRate} className="bg-white" />
                 </div>
 
                 {/* Режим работы ДЭС */}
@@ -1721,102 +1773,7 @@ const AdminSidebar = ({
                    </div>
                 </div>
 
-                <div className="space-y-4 pt-2 border-t border-doc-slate-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-black text-brand-blue uppercase leading-none">Конфигурация Станции 1</p>
-                    {powerFilter && (
-                      <button 
-                        onClick={() => setPowerFilter(null)}
-                        className="text-[9px] font-black text-red-500 uppercase bg-red-50 px-2 py-1 rounded hover:bg-red-100"
-                      >
-                        Сбросить фильтр ({powerFilter} кВт)
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-4">
-                    <StationFields config={station1} setConfig={setStation1} specs={loadedSpecs} powerFilter={powerFilter} />
-                    <FormattedPriceInput label="Стоимость ДЭС 1" value={station1.price || 0} onChange={(val: number) => setStation1({...station1, price: val})} className="text-brand-blue" />
-                  </div>
-                </div>
-
-                {(isTwoStations || isThreeStations) && (
-                  <div className="space-y-4 pt-4 border-t border-brand-blue/10">
-                    <p className="text-[10px] font-black text-brand-blue uppercase leading-none mb-2">Конфигурация Станции 2</p>
-                    <div className="space-y-4">
-                      <StationFields config={station2} setConfig={setStation2} specs={loadedSpecs} />
-                      <FormattedPriceInput label="Стоимость ДЭС 2" value={station2.price || 0} onChange={(val: number) => setStation2({...station2, price: val})} className="text-brand-blue" />
-                    </div>
-                  </div>
-                )}
-
-                {isThreeStations && (
-                  <div className="space-y-4 pt-4 border-t border-emerald-600/10">
-                    <p className="text-[10px] font-black text-emerald-600 uppercase leading-none mb-2">Конфигурация Станции 3</p>
-                    <div className="space-y-4">
-                      <StationFields config={station3} setConfig={setStation3} specs={loadedSpecs} />
-                      <FormattedPriceInput label="Стоимость ДЭС 3" value={station3.price || 0} onChange={(val: number) => setStation3({...station3, price: val})} className="text-emerald-600" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-4 pt-4 border-t border-doc-slate-100">
-                  <FormattedPriceInput label="Тариф топлива (руб/л)" value={fuelPrice} onChange={setFuelPrice} className="bg-white" />
-                  <FormattedPriceInput label="Тариф ТО (руб/час)" value={toRate} onChange={setToRate} className="bg-white" />
-                </div>
-
-                <div className="pt-4 border-t border-doc-slate-100 space-y-8">
-                  <ExtraOptions options={additionalOptions} setOptions={setAdditionalOptions} />
-                  <ServicesManager services={services} setServices={setServices} />
-                  <DeliveryManager delivery={deliveryInfo} setDelivery={setDeliveryInfo} />
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-doc-slate-100">
-                   <div className="space-y-1.5">
-                      <label className="text-[11px] font-black text-doc-slate-500 uppercase pl-1">Сопроводительное письмо</label>
-                      <textarea 
-                        placeholder="Введите текст приветствия..."
-                        value={coverLetter}
-                        onChange={(e) => setCoverLetter(e.target.value)}
-                        className="admin-input min-h-[120px] py-3 leading-relaxed text-xs"
-                      />
-                    </div>
-                </div>
-
                 <div className="space-y-3 pt-4 border-t border-doc-slate-100">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-black text-doc-slate-500 uppercase tracking-widest">Назначение ДЭС</p>
-                    <button 
-                      onClick={() => {
-                        setUsePurpose(!usePurpose);
-                        const newBlocks = [...blocks];
-                        const idx = newBlocks.findIndex(b => b.type === 'purpose');
-                        if (idx !== -1) {
-                          newBlocks[idx].isVisible = !usePurpose;
-                          setBlocks(newBlocks);
-                        }
-                      }}
-                      className={cn(
-                        "relative w-10 h-5 rounded-full transition-colors",
-                        usePurpose ? 'bg-brand-blue' : 'bg-doc-slate-300'
-                      )}
-                    >
-                      <div className={cn(
-                        "absolute top-1 w-3 h-3 bg-white rounded-full transition-transform",
-                        usePurpose ? 'left-6' : 'left-1'
-                      )} />
-                    </button>
-                  </div>
-                  {usePurpose && (
-                    <select 
-                      value={purposeType}
-                      onChange={(e) => setPurposeType(e.target.value as any)}
-                      className="admin-input text-xs font-bold"
-                    >
-                      {Object.entries(PURPOSES).map(([k, v]) => (
-                        <option key={k} value={k}>{v.label}</option>
-                      ))}
-                    </select>
-                  )}
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] font-black text-doc-slate-500 uppercase tracking-widest leading-none">Таблица состава цены</p>
                     <button 
@@ -1832,6 +1789,31 @@ const AdminSidebar = ({
                       )} />
                     </button>
                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-doc-slate-100 space-y-8">
+                  <ExtraOptions options={additionalOptions} setOptions={setAdditionalOptions} />
+                  <ServicesManager services={services} setServices={setServices} />
+                </div>
+
+                <div className="pt-4 border-t border-doc-slate-100 space-y-4">
+                  <div className="flex items-center justify-between border-b border-doc-slate-100 pb-2">
+                    <p className="text-[11px] font-black text-orange-500 uppercase">Блок Затраты</p>
+                    <button 
+                      onClick={() => setBlocks(blocks.map((b: Block) => b.type === 'costs' ? { ...b, isVisible: !b.isVisible } : b))}
+                      className={cn(
+                        "relative w-10 h-5 rounded-full transition-colors",
+                        blocks.find((b: Block) => b.type === 'costs')?.isVisible ? 'bg-orange-500' : 'bg-doc-slate-300'
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-3 h-3 bg-white rounded-full transition-transform",
+                        blocks.find((b: Block) => b.type === 'costs')?.isVisible ? 'left-6' : 'left-1'
+                      )} />
+                    </button>
+                  </div>
+
+                  <DeliveryManager delivery={deliveryInfo} setDelivery={setDeliveryInfo} />
                 </div>
               </div>
             </motion.div>
@@ -2230,19 +2212,14 @@ const QuestionnairesManagement = ({ user, questionnaires, onRefresh, onFill, onE
                 <td className="p-4 pr-6 text-right">
                   <div className="flex justify-end gap-2">
                     <button 
-                      onClick={() => onConvert(q)}
-                      className="px-4 py-2 bg-brand-blue text-white rounded-lg hover:bg-brand-blue/90 transition-all shadow-sm font-black text-[9px] uppercase tracking-widest flex items-center gap-2"
-                      title="Создать КП на базе опросного листа"
-                    >
-                      <Plus className="w-3 h-3" /> Создать КП
-                    </button>
-
-                    <button 
                       onClick={() => onFill(q.slug!)}
-                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                      title="Заполнить самому"
+                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm group relative"
+                      title={q.status === 'completed' ? 'Редактировать опросный лист' : 'Заполнить самому'}
                     >
                       <Edit className="w-4 h-4" />
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        {q.status === 'completed' ? 'Редактировать' : 'Заполнить самому'}
+                      </span>
                     </button>
 
                     <button 
@@ -2261,13 +2238,22 @@ const QuestionnairesManagement = ({ user, questionnaires, onRefresh, onFill, onE
                       <Share2 className="w-4 h-4" />
                     </button>
                     {q.status === 'completed' && (
-                      <button 
-                        onClick={() => setViewingId(q.id!)}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                        title="Просмотреть результаты"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <>
+                        <button 
+                          onClick={() => setViewingId(q.id!)}
+                          className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          title="Просмотреть результаты"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => onConvert(q)}
+                          className="px-4 py-2 bg-brand-blue text-white rounded-lg hover:bg-brand-blue/90 transition-all shadow-sm font-black text-[9px] uppercase tracking-widest flex items-center gap-2"
+                          title="Создать КП на базе опросного листа"
+                        >
+                          <Plus className="w-3 h-3" /> Создать КП
+                        </button>
+                      </>
                     )}
                     <button 
                       onClick={() => handleDelete(q.id!)}
@@ -2326,7 +2312,8 @@ const QuestionnairesManagement = ({ user, questionnaires, onRefresh, onFill, onE
                   <h4 className="text-[10px] font-black text-brand-blue uppercase mb-4 border-b pb-2">Основные данные</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <ResultRow label="ИНН" value={selectedQ.data?.inn} />
-                    <ResultRow label="Регион" value={selectedQ.data?.activityRegion} />
+                    <ResultRow label="Вид деятельности" value={selectedQ.data?.activity === 'other' ? selectedQ.data?.activityOther : selectedQ.data?.activity} />
+                    <ResultRow label="Регион" value={selectedQ.data?.region} />
                     <ResultRow label="Телефон" value={selectedQ.data?.phone || selectedQ.phone} />
                     <ResultRow label="Email" value={selectedQ.data?.email || selectedQ.email} />
                   </div>
@@ -2356,6 +2343,17 @@ const QuestionnairesManagement = ({ user, questionnaires, onRefresh, onFill, onE
                   </div>
                 )}
                 
+                <div>
+                  <h4 className="text-[10px] font-black text-brand-blue uppercase mb-4 border-b pb-2">Доставка</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <ResultRow label="Способ доставки" value={selectedQ.data?.deliveryMethod === 'pickup' ? 'Самовывоз' : 'Доставка Компанией Дизель'} />
+                    {selectedQ.data?.deliveryMethod === 'company_delivery' && (
+                      <ResultRow label="Город доставки" value={selectedQ.data?.deliveryCity} />
+                    )}
+                    <ResultRow label="Количество единиц" value={selectedQ.data?.deliveryQuantity} />
+                  </div>
+                </div>
+
                 {selectedQ.data?.otherWishes && (
                   <div>
                     <h4 className="text-[10px] font-black text-brand-blue uppercase mb-4 border-b pb-2">Дополнительно</h4>
@@ -2984,7 +2982,15 @@ const DeliveryManager = ({ delivery, setDelivery }: any) => {
            </button>
         </div>
 
-        {delivery.type === 'delivery' && (
+        {delivery.type === 'pickup' ? (
+          <div className="flex bg-blue-50/50 rounded-2xl border border-blue-100 overflow-hidden">
+             <div className="flex-1 p-4">
+                <p className="text-[10px] text-blue-600 font-bold italic leading-relaxed text-center">Самовывоз со склада ООО «Компания Дизель»:</p>
+                <p className="text-[10px] text-dark-blue font-black uppercase tracking-tight text-center mt-1">г. Тутаев, ул. Промзона, 10</p>
+                <p className="text-[9px] text-emerald-600 font-black uppercase text-center mt-1">— Бесплатно</p>
+             </div>
+          </div>
+        ) : (
           <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex gap-1 p-1 bg-doc-slate-50 rounded-xl border border-doc-slate-100">
                <button 
@@ -3021,14 +3027,6 @@ const DeliveryManager = ({ delivery, setDelivery }: any) => {
                   </label>
                </div>
             </div>
-          </div>
-        )}
-
-        {delivery.type === 'pickup' && (
-          <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-             <p className="text-[10px] text-blue-600 font-bold italic leading-relaxed text-center">Самовывоз со склада ООО «Компания Дизель»:</p>
-             <p className="text-[10px] text-dark-blue font-black uppercase tracking-tight text-center mt-1">г. Тутаев, ул. Промзона, 10</p>
-             <p className="text-[9px] text-emerald-600 font-black uppercase text-center mt-1">— Бесплатно</p>
           </div>
         )}
       </div>
@@ -3152,7 +3150,7 @@ const PreviewArea = ({
       {(onBack && (!isClientView || user)) && (
           <button 
             onClick={onBack}
-            className="fixed top-6 right-24 md:right-32 p-4 bg-white text-doc-slate-600 rounded-full shadow-lg no-print transition-all z-50 flex items-center gap-2 group"
+            className="fixed top-6 left-6 p-4 bg-white text-doc-slate-600 rounded-full shadow-lg no-print transition-all z-[60] flex items-center gap-2 group"
           >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="hidden md:inline text-xs font-black uppercase">Назад в панель</span>
@@ -3909,7 +3907,12 @@ const CostDetailsList = ({ stationPrice, additionalOptions, services = [], deliv
          <div className="space-y-2">
            <div className="flex justify-between items-start text-[10px] font-bold">
              <div className="flex flex-col">
-                <span className="text-doc-slate-600 mr-4 break-words leading-tight">Доставка: {deliveryInfo.type === 'pickup' ? 'Самовывоз с склада ООО «Компания Дизель»: г. Тутаев, ул. Промзона, 10' : (deliveryInfo.address || '[город]')} ({deliveryInfo.transportType === 'rail' ? 'Ж/Д' : 'Авто'})</span>
+                <span className="text-doc-slate-600 mr-4 break-words leading-tight">
+                 {deliveryInfo.type === 'pickup' 
+                   ? 'Самовывоз со склада ООО «Компания Дизель»' 
+                   : `Доставка: ${deliveryInfo.address || '[город]'} (${deliveryInfo.transportType === 'rail' ? 'Ж/Д' : 'Авто'})`
+                 }
+               </span>
                 {deliveryInfo.isIncluded && (
                   <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">Включено в стоимость</span>
                 )}

@@ -94,7 +94,9 @@ export const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ slug, onCo
   
   const [formData, setFormData] = useState<any>({
     inn: '',
-    activityRegion: '',
+    activity: '',
+    activityOther: '',
+    region: '',
     powerKw: '',
     powerKva: '',
     voltage: '400',
@@ -204,6 +206,16 @@ export const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ slug, onCo
         <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2">Спасибо!</h1>
         <p className="text-slate-600 mb-8">Ваш опросный лист успешно отправлен. Наш менеджер свяжется с Вами в ближайшее время.</p>
+        
+        <div className="flex flex-col gap-4 mb-8">
+           <button 
+             onClick={() => setSuccess(false)}
+             className="text-brand-blue font-bold text-sm hover:underline"
+           >
+             Редактировать ответы
+           </button>
+        </div>
+
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-left">
           <p className="text-sm font-medium text-slate-500 mb-1">Менеджер:</p>
           <p className="font-bold">{questionnaire.managerName}</p>
@@ -252,18 +264,43 @@ export const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ slug, onCo
               <Info className="w-5 h-5 text-brand-blue" />
               <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">Информация об организации</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
               <Input 
                 label="ИНН организации" 
                 value={formData.inn} 
                 onChange={(e: any) => setFormData({...formData, inn: e.target.value})} 
                 placeholder="12 знаков"
               />
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1 leading-none">Вид деятельности</label>
+                <select 
+                  value={formData.activity}
+                  onChange={(e) => setFormData({...formData, activity: e.target.value})}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all"
+                >
+                  <option value="">Выберите из списка...</option>
+                  <option value="agro">Агропромышленный комплекс</option>
+                  <option value="zhkh">Жилищно-коммунального хозяйства (ЖКХ)</option>
+                  <option value="industry">Промышленность</option>
+                  <option value="construction">Строительство</option>
+                  <option value="energy">Энергетика</option>
+                  <option value="other">Другое</option>
+                </select>
+                {formData.activity === 'other' && (
+                  <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                    <Input 
+                      placeholder="Укажите Ваш вид деятельности" 
+                      value={formData.activityOther}
+                      onChange={(e: any) => setFormData({...formData, activityOther: e.target.value})}
+                    />
+                  </div>
+                )}
+              </div>
               <Input 
-                label="Вид деятельности и регион" 
-                value={formData.activityRegion} 
-                onChange={(e: any) => setFormData({...formData, activityRegion: e.target.value})} 
-                placeholder="Напр: Строительство, ЯО"
+                label="Регион" 
+                value={formData.region} 
+                onChange={(e: any) => setFormData({...formData, region: e.target.value})} 
+                placeholder="Напр: Ярославская обл."
               />
               <Input 
                 label="Телефон" 
@@ -511,15 +548,27 @@ export const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ slug, onCo
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Input label="Количество единиц (шт)" type="number" value={formData.deliveryQuantity} onChange={(e: any) => setFormData({...formData, deliveryQuantity: e.target.value})} />
-              <RadioGroup 
-                label="Способ доставки"
-                value={formData.deliveryMethod}
-                onChange={(val: string) => setFormData({...formData, deliveryMethod: val})}
-                options={[
-                  { value: 'pickup', label: 'Самовывоз' },
-                  { value: 'company_delivery', label: 'Доставка Компанией Дизель' }
-                ]}
-              />
+              <div className="space-y-4">
+                <RadioGroup 
+                  label="Способ доставки"
+                  value={formData.deliveryMethod}
+                  onChange={(val: string) => setFormData({...formData, deliveryMethod: val})}
+                  options={[
+                    { value: 'pickup', label: 'Самовывоз' },
+                    { value: 'company_delivery', label: 'Доставка Компанией Дизель' }
+                  ]}
+                />
+                {formData.deliveryMethod === 'company_delivery' && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <Input 
+                      label="Город доставки"
+                      placeholder="Укажите город..."
+                      value={formData.deliveryCity}
+                      onChange={(e: any) => setFormData({...formData, deliveryCity: e.target.value})}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </section>
 
