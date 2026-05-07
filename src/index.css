@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-brand-blue: #002F87;
+  --color-brand-blue-dark: #152D7A;
+  --color-brand-gradient-start: #104FBF;
+  --color-brand-gradient-end: #152D7A;
+  --color-accent-grey: #EBE9EA;
+  --color-bg-gray: #f4f7f9;
+  --color-text-dark: #000000;
+  --color-border-color: #d1d9e0;
+  --color-accent-light: #e6edf5;
+  
+  /* Brand specific shades */
+  --color-doc-blue-900: #00296B;
+  --color-doc-blue-800: #002F87;
+  --color-doc-red: #FF0000;
+  
+  /* Standard palette to avoid oklab/oklch issues in html2canvas (Tailwind v4 defaults to oklch) */
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-amber-500: #f59e0b;
+  --color-red-500: #ef4444;
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  --color-doc-slate-50: #f8fafc;
+  --color-doc-slate-100: #f1f5f9;
+  --color-doc-slate-200: #e2e8f0;
+  --color-doc-slate-300: #cbd5e1;
+  --color-doc-slate-400: #94a3b8;
+  --color-doc-slate-500: #64748b;
+  --color-doc-slate-600: #475569;
+  --color-doc-slate-700: #334155;
+  --color-doc-slate-800: #1e293b;
+  --color-doc-blue-50: #eff6ff;
+  --color-doc-blue-50-op50: #f7fbff;
+  --color-doc-blue-50-op30: #fafdff;
+  --color-doc-blue-200: #bfdbfe;
+  --color-doc-blue-500: #3b82f6;
+  --color-brand-blue-op10: #e6edf5;
+  --color-brand-blue-op20: #cddee8;
+  --color-doc-slate-50-op50: #fcfdfe;
+  --color-doc-slate-500-op80: #8390a2;
+  --color-doc-slate-500-op60: #a2adb9;
+  --color-doc-slate-700-op80: #5c6777;
+  --color-white-op80: #cccccc;
+  --color-white-op70: #b3b3b3;
+  --color-white-op50: #808080;
+  --color-doc-slate-400-op60: #bdc7d4;
+  --color-doc-slate-400-op50: #c9d1db;
+  --color-doc-blue-600: #2563eb;
+  --color-brand-blue-op5: #f2f5f9;
+
+  --color-secondary-blue-600: #1d4ed8;
+  
+  --shadow-brand-blue: 0 10px 15px -3px rgba(0, 47, 13, 0.1), 0 4px 6px -2px rgba(0, 47, 13, 0.05);
+}
+
+@layer base {
+  body {
+    @apply font-sans text-text-dark antialiased bg-bg-gray text-[16px] leading-relaxed;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@layer components {
+  .admin-input {
+    @apply w-full bg-bg-gray border border-border-color rounded-lg px-4 py-3 text-[14px] font-medium focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 outline-none transition-all;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  html, body {
+    width: 210mm;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #proposal-document, #proposal-document * {
+    visibility: visible;
+  }
+
+  #proposal-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    min-width: 210mm !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Page Break Controls */
+.page-break-avoid {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.page-break-before {
+  break-before: page;
+  page-break-before: always;
+}
+
+.page-break-after {
+  break-after: page;
+  page-break-after: always;
+}
+
+/* PDF Specific Layout Fixes */
+.pdf-mode {
+  width: 1024px !important;
+  min-width: 1024px !important;
+  max-width: 1024px !important;
+  margin: 0 auto !important;
+  background: white !important;
+  padding: 0 !important;
+}
+
+.pdf-mode .flex-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 1.5rem !important;
+}
+
+.pdf-mode .flex-1 {
+  flex: 1 1 0% !important;
+}
+
+.pdf-mode .grid-cols-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1.5rem !important;
+}
+
+.pdf-mode .md\:grid-cols-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 1.5rem !important;
+}
+
+.pdf-mode .gap-y-4 {
+  row-gap: 1rem !important;
+}
+
+.pdf-mode .gap-x-12 {
+  column-gap: 1.5rem !important;
+}
+
+.pdf-mode * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  box-sizing: border-box !important;
+}
