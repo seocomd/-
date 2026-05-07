@@ -3262,7 +3262,7 @@ const PreviewArea = ({
                        
                        <div className="w-full md:w-64 h-64 bg-white border border-doc-slate-100 rounded-3xl overflow-hidden p-2 shadow-sm shrink-0 flex items-center justify-center">
                           <img 
-                            src={modeOfOperation === 'main' ? "/input_file_3.png" : "/input_file_1.png"} 
+                            src={modeOfOperation === 'main' ? "/osnovnoi.png" : "/rezerv.png"} 
                             className="w-full h-full object-contain"
                             alt="Mode"
                             referrerPolicy="no-referrer"
