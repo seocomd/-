@@ -12,6 +12,21 @@ services:
     volumes:
       - diesel_data:/data
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.diesel-kp.entrypoints=websecure"
+      - "traefik.http.routers.diesel-kp.rule=Host(`kp.comd.ru`)"
+      - "traefik.http.routers.diesel-kp.service=diesel-kp"
+      - "traefik.http.routers.diesel-kp.tls=true"
+      - "traefik.http.services.diesel-kp.loadbalancer.server.port=3000"
+    networks:
+      - proxy
+      - default
+
+networks:
+  proxy:
+    external: true
 
 volumes:
   diesel_data:
