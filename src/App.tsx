@@ -526,6 +526,7 @@ export default function App() {
   const [usePurpose, setUsePurpose] = useState(false);
   const [useControlPanel, setUseControlPanel] = useState(true);
   const [purposeType, setPurposeType] = useState<keyof typeof PURPOSES>('agro');
+  const [globalInteractiveConfig, setGlobalInteractiveConfig] = useState<any>(null);
 
   // --- SQLite API Sync ---
 
@@ -585,6 +586,22 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const pid = params.get('id');
       const qid = params.get('q');
+
+      // Fetch global points default
+      let globalConfig: any = null;
+      try {
+        const gResp = await fetch('/api/settings/interactive_container_default_points');
+        if (gResp.ok) {
+          const gData = await gResp.json();
+          if (gData.value) {
+            globalConfig = gData.value;
+            setGlobalInteractiveConfig(gData.value);
+          }
+        }
+      } catch (e) {
+        console.error('Global settings load error:', e);
+      }
+
       if (pid) {
         loadProposal(pid);
       } else if (qid) {
@@ -592,6 +609,9 @@ export default function App() {
         setView('questionnaire');
         setLoading(false);
       } else {
+        if (globalConfig) {
+          setBlocks(prev => prev.map(b => b.type === 'interactive-container' ? { ...b, config: globalConfig } : b));
+        }
         setLoading(false);
       }
     };
@@ -673,6 +693,8 @@ export default function App() {
             { id: 'b7', type: 'comparison', isVisible: true },
             { id: 'b8', type: 'costs', isVisible: true },
             { id: 'b9', type: 'control-panel', isVisible: data.useControlPanel || true },
+            { id: 'b13', type: 'reserve-input', isVisible: true },
+            { id: 'b12', type: 'interactive-container', isVisible: true, config: globalInteractiveConfig },
             { id: 'b10', type: 'about', isVisible: data.showCompanyInfo || true },
             { id: 'b11', type: 'footer', isVisible: true },
           ]);
@@ -836,7 +858,27 @@ export default function App() {
             user={user}
             onLogin={handleLogin}
             onLogout={handleLogout}
-            onCreate={() => { setView('editor'); setCurrentProposalId(null); setClientName(''); }}
+            onCreate={() => { 
+              setView('editor'); 
+              setCurrentProposalId(null); 
+              setClientName(''); 
+              // Reset blocks with global config if available
+              setBlocks(prev => [
+                { id: 'b2', type: 'contacts', isVisible: true },
+                { id: 'b1', type: 'header', isVisible: true },
+                { id: 'b3', type: 'client-info', isVisible: true },
+                { id: 'b4', type: 'message', isVisible: true },
+                { id: 'b5', type: 'purpose', isVisible: false },
+                { id: 'b6', type: 'specs', isVisible: true },
+                { id: 'b7', type: 'comparison', isVisible: true },
+                { id: 'b8', type: 'costs', isVisible: true },
+                { id: 'b9', type: 'control-panel', isVisible: true },
+                { id: 'b13', type: 'reserve-input', isVisible: true },
+                { id: 'b12', type: 'interactive-container', isVisible: true, config: globalInteractiveConfig },
+                { id: 'b10', type: 'about', isVisible: true },
+                { id: 'b11', type: 'footer', isVisible: true },
+              ]);
+            }}
             onView={(id: string) => loadProposal(id, 'proposal')}
             onEdit={(id: string) => loadProposal(id, 'editor')}
             onDelete={handleDeleteProposal}
@@ -964,7 +1006,7 @@ export default function App() {
                     { id: 'b8', type: 'costs', isVisible: true },
                     { id: 'b9', type: 'control-panel', isVisible: true },
                     { id: 'b13', type: 'reserve-input', isVisible: true },
-                    { id: 'b12', type: 'interactive-container', isVisible: true },
+                    { id: 'b12', type: 'interactive-container', isVisible: true, config: globalInteractiveConfig },
                     { id: 'b10', type: 'about', isVisible: true },
                     { id: 'b11', type: 'footer', isVisible: true },
                   ]);
@@ -3050,6 +3092,16 @@ const PreviewArea = ({
 
   const updateBlockConfig = (blockId: string, config: any) => {
     onUpdateBlocks((prev: any) => prev.map((b: any) => b.id === blockId ? { ...b, config } : b));
+    
+    // Auto-save as global default if admin changes interactive container
+    const isInteractive = blocks.find((b: any) => b.id === blockId)?.type === 'interactive-container';
+    if (user?.role === 'admin' && isInteractive) {
+      fetch('/api/settings/interactive_container_default_points', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: config })
+      }).catch(err => console.error('Failed to save global default points:', err));
+    }
   };
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 2.0));

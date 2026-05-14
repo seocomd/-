@@ -474,6 +474,25 @@ app.delete('/api/questionnaires/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// Settings Routes
+app.get('/api/settings/:key', (req, res) => {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(req.params.key) as any;
+  if (row) {
+    res.json({ value: JSON.parse(row.value) });
+  } else {
+    res.status(404).json({ error: 'Not found' });
+  }
+});
+
+app.post('/api/settings/:key', (req, res) => {
+  const { value } = req.body;
+  db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
+    req.params.key, 
+    JSON.stringify(value)
+  );
+  res.json({ success: true });
+});
+
 // Vite Middleware
 if (process.env.NODE_ENV !== 'production') {
   const vite = await createViteServer({
